@@ -1,0 +1,45 @@
+<INCLUDE_TYPOSCRIPT: source="FILE:EXT:json_rendering/Configuration/TypoScript/lib.structure.typoscript">
+<INCLUDE_TYPOSCRIPT: source="FILE:EXT:json_rendering/Configuration/TypoScript/gridelements.typoscript">
+
+json_output = PAGE
+json_output {
+    config {
+        disableAllHeaderCode = 1
+        debug = 0
+        no_cache = 1
+        additionalHeaders {
+            10 {
+                header = Content-Type: application/json
+                replace = 1
+            }
+        }
+        htmlspecialchars = 0
+    }
+    typeNum = 123
+
+    10 = FLUIDTEMPLATE
+    10.file = EXT:json_rendering/Resources/Private/Layouts/Page.json
+    10.variables {
+        contentElements < styles.content.get
+        structure < lib.structure
+    }
+    #take contents from all columns
+    10.variables.contentElements.select.where = colPos>=0
+}
+
+
+# we need to tell the content rendering to use our generic json view
+# for rendering all content elements
+[globalVar = GP:type=123]
+
+    lib.contentElement {
+        templateRootPaths.10 = EXT:json_rendering/Resources/Private/Templates/
+        layoutRootPaths.10 = EXT:json_rendering/Resources/Private/Layouts/
+        format = json
+    }
+    tt_content.header.templateName      = GenericCE
+    tt_content.text.templateName        = GenericCE
+    tt_content.textmedia.templateName   = GenericCE
+    tt_content.textpic.templateName     = GenericCE
+
+[global]

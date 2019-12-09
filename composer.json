@@ -1,0 +1,15 @@
+{
+  "name": "lowres/json_rendering",
+  "type": "typo3-cms-extension",
+  "description" : "Render the frontend as JSON.",
+  "license": "GPL-2.0+",
+  "version": "1.0.0",
+  "require": {
+    "typo3/cms": "^8.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "Lowres\\JsonRendering\\": "Classes"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{namespace json=Webyte\JsonRendering\ViewHelpers}
+
+{escaping off}
+
+{json:jsonPage(pageData: _all)}
+

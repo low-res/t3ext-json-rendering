@@ -1,0 +1,7 @@
+{namespace json=Webyte\JsonRendering\ViewHelpers}
+
+{escaping off}
+
+-Default-
+
+{json:jsonContentElement(contentElement: data)}

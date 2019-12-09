@@ -1,0 +1,83 @@
+# borrowed from
+lib.structure = HMENU
+lib.structure {
+    special = directory
+    special.value = 1
+    special.depth = 4
+    special.forceAbsoluteUrl = 1
+
+    1 = TMENU
+    1 {
+        expAll = 1
+        noBlur = 1
+        wrap = [|]
+
+        NO {
+            wrapItemAndSub = {|}, |*| {|}, |*| {|}
+            linkWrap = |
+            ATagBeforeWrap = 0
+            doNotLinkIt = 1
+            stdWrap.htmlSpecialChars = 0
+
+            stdWrap.cObject = COA
+            stdWrap.cObject {
+                # gamekey/translation key taken from the abstract
+                10 = TEXT
+                10 {
+                    field = title
+                    htmlSpecialChars = 1
+                    wrap = "title":"|",
+                }
+
+                # Link
+                20 = TEXT
+                20 {
+                    field = uid
+                    htmlSpecialChars = 1
+                    wrap = "uri":"|",
+                    typolink.parameter.field = uid
+                    typolink.returnLast = url
+                }
+
+                30 = TEXT
+                30.value = "status":"passive"
+            }
+        }
+        # same as NO but with , after the uri
+        IFSUB < .NO
+        IFSUB = 1
+        IFSUB {
+            stdWrap.cObject {
+                20 {
+                    wrap = "uri":"|",
+                }
+            }
+        }
+
+        CUR < .NO
+        CUR = 1
+        CUR.stdWrap.cObject.30.value = "status":"current"
+
+        ACT < .NO
+        ACT = 1
+        ACT.stdWrap.cObject.30.value = "status":"active"
+    }
+
+    # second layer is a bit different
+    2 < .1
+    2 {
+        wrap = |
+        stdWrap.wrap = ,"children": [|]
+    }
+
+    # All further sub levels are like levels 2
+    3 < .2
+    4 < .3
+    5 < .4
+    6 < .5
+    7 < .6
+    8 < .7
+
+    # last layer has no children
+    8.IFSUB = 0
+}

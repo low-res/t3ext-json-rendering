@@ -1,0 +1,31 @@
+# https://coders.care/de/blog/tutorial/gridelements-und-cms-8/
+lib.gridelements.defaultGridSetup {
+    columns {
+        default {
+            renderObj = COA
+            renderObj {
+                20 =< tt_content
+            }
+        }
+    }
+    cObject =< lib.contentElement
+}
+
+plugin.tx_gridelements_pi1 >
+tt_content.gridelements_pi1 >
+tt_content.gridelements_pi1 =< lib.contentElement
+tt_content.gridelements_pi1 {
+    templateName = GenericCE
+    variables {
+        content = COA
+        content {
+            10 = USER
+            10 {
+                userFunc = GridElementsTeam\Gridelements\Plugin\Gridelements->main
+                setup {
+                    default < lib.gridelements.defaultGridSetup
+                }
+            }
+        }
+    }
+}
