@@ -5,7 +5,7 @@
   "license": "GPL-2.0+",
   "version": "0.0.1",
   "require": {
-    "typo3/cms": "^9.5"
+    "typo3/cms-core": "^9.5 || ^10.0"
   },
   "autoload": {
     "psr-4": {
