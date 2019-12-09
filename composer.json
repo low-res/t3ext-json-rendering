@@ -1,5 +1,5 @@
 {
-  "name": "lowres/json_rendering",
+  "name": "lowres/t3ext-json-rendering",
   "type": "typo3-cms-extension",
   "description" : "Render the frontend as JSON.",
   "license": "GPL-2.0+",
