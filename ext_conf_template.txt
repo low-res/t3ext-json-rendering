@@ -1,0 +1,10 @@
+excludefields {
+    # cat=basic/enable; type=string; label=Fields that are not needed in output of page-object
+    page=cruser_id,tstamp, fe_group, sorting, rowDescription, editlock, l10n_source, l10n_state, t3_origuid, l10n_diffsource, t3ver_oid, t3ver_id, t3ver_label, t3ver_wsid, t3ver_state,t3ver_stage,t3ver_count,t3ver_tstamp,t3ver_move_id,perms_userid,perms_groupid,perms_user,perms_group,perms_everybody,TSconfig: null,is_siteroot,php_tree_stop,cache_timeout,cache_tags,newUntil,SYS_LASTCHANGED,module,extendToSubpages,mount_pid,mount_pid_ol,l18n_cfg,backend_layout,backend_layout_next_level,tsconfig_includes: null,legacy_overlay_uid,tx_impexp_origuid,TSconfig,tsconfig_includes
+
+    # cat=basic/enable; type=string; label=Fields that are not needed in output of tt_content
+    tt_content=settings.media.popup,data.rowDescription,data.rowDescription,data.tstamp,data.cruser_id,data.fe_group,data.sorting,data.editlock,data.l10n_source,data.l10n_state,data.t3_origuid,data.l18n_diffsource,data.t3ver_oid,data.t3ver_id,data.t3ver_label,data.t3ver_wsid,data.t3ver_state,data.t3ver_stage,data.t3ver_count,data.t3ver_tstamp,data.t3ver_move_id,data.imageborder,data.pages,data.sectionIndex,data.linkToTop,data.target,data.recursive,data.pi_flexform,data.accessibility_title,data.accessibility_bypass,data.accessibility_bypass_text,data.table_class,data.table_caption,data.table_delimiter,data.table_enclosure,data.table_header_position,data.table_tfoot,data.tx_impexp_origuid,data.backupColPos,data.tx_gridelements_backend_layout
+
+    # cat=basic/enable; type=string; label=Fields that are not needed in file references
+    file=cruser_id,l10n_parent,l10n_state,l10n_diffsource,sha1,size,creation_date,modification_date,folder_hash,t3ver_oid,t3_origuid,t3ver_id, t3ver_label, t3ver_wsid, t3ver_state,t3ver_stage,t3ver_count,t3ver_tstamp,t3ver_move_id
+}
