@@ -3,17 +3,22 @@
 namespace Lowres\JsonRendering\Utils;
 
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 class DataProcessingUtil
 {
-    const TOKEN='__|__';
+    const TOKEN = '__|__';
 
     private $contentResult = null;
     private $backendConfigurationArr;
 
+
     public function __construct ()
     {
-        $this->backendConfigurationArr = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('t3ext_json_rendering');
+        $this->backendConfigurationArr  = GeneralUtility::makeInstance(ExtensionConfiguration::class)->get('t3ext_json_rendering');
+        $this->contentObject            = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+        $this->contentObject->start([], '');
     }
 
 
@@ -23,8 +28,11 @@ class DataProcessingUtil
      */
     public function processContentElements ( array $contentElements )
     {
-        $this->processGridelementsContainers( $contentElements );
-        $this->processFiles( $contentElements );
+        $this->contentResult = array_map( function( $tmpCe ){
+            return $this->processTypolinks( $tmpCe );
+        }, $contentElements);
+        $this->processGridelementsContainers( );
+        $this->processFiles();
         $this->contentResult = $this->stripUnwantedKeysFromArray($this->contentResult, 'tt_content');
         return json_encode( $this->contentResult ).self::TOKEN;
     }
@@ -36,7 +44,7 @@ class DataProcessingUtil
     public function processPage ( array $pageData )
     {
         // first we need to split the string of content elements back to single ces
-        $rawContentString = $pageData['contentElements'];
+        $rawContentString       = $pageData['contentElements'];
         $decodedContentElements = $this->decodeContentElementsFromJsonString( $rawContentString );
 
         // remove unwanted fields from page
@@ -57,7 +65,8 @@ class DataProcessingUtil
 
         foreach ($remove as $removeField) {
             $path = explode(".", $removeField);
-
+            // support different depth of nesting.
+            // no idea yet for a smarter solution yet :(
             switch( count($path) ) {
                 case 2:
                     unset($inputArr[$path[0]][$path[1]]);
@@ -109,22 +118,19 @@ class DataProcessingUtil
      * @param $contentElements
      * @return mixed
      */
-    private function processGridelementsContainers( $contentElements ) {
-        if(array_key_exists('tx_gridelements_view_children', $contentElements)) {
-            //die( var_dump($contentElement['tx_gridelements_view_children']) );
-            //unset( $contentElement['tx_gridelements_view_children'] );
-        }
+    private function processGridelementsContainers( ) {
+        $contentElements = $this->contentResult;
         if(array_key_exists('tx_gridelements_view_columns', $contentElements)) {
             $c = $contentElements['tx_gridelements_view_columns'];
-            $contentElements['tx_gridelements_view_columns'] = self::processGridelementsViewColumns($c);
+            $contentElements['tx_gridelements_view_columns'] = $this->processGridelementsViewColumns($c);
         }
 
-        $keys = array_keys($contentElements);
-        $matchingKeys1 = preg_grep('/tx_gridelements_view_child_(.*)/', $keys);
-        $matchingKeys2 = preg_grep('/tx_gridelements_view_column_(.*)/', $keys);
-        $matchingKeys = array_merge($matchingKeys1,$matchingKeys2);
+        $keys           = array_keys($contentElements);
+        $matchingKeys1  = preg_grep('/tx_gridelements_view_child_(.*)/', $keys);
+        $matchingKeys2  = preg_grep('/tx_gridelements_view_column_(.*)/', $keys);
+        $matchingKeys   = array_merge($matchingKeys1,$matchingKeys2);
         foreach ($matchingKeys as $childKey) {
-            $contentElements[$childKey] = self::decodeJSON( $contentElements[$childKey] );
+            $contentElements[$childKey] = $this->decodeJSON( $contentElements[$childKey] );
         }
         $this->contentResult = $contentElements;
     }
@@ -146,16 +152,49 @@ class DataProcessingUtil
      *
      * @param array $filereferences
      */
-    private function processFiles( array $contentElements ) {
-        if(array_key_exists('files', $contentElements)) {
-            $filereferences = $contentElements['files'];
-            $files = [];
-            foreach ( $filereferences as $tmpFileRef ) {
-                $singleFile = $tmpFileRef->getProperties();
-                $files[] = $this->stripUnwantedKeysFromArray($singleFile,'file');
+    private function processFiles() {
+        $contentElements = $this->contentResult;
+
+        // files array
+        unset( $this->contentResult['files'] );
+//        if(array_key_exists('files', $contentElements)) {
+//            $filereferences = $contentElements['files'];
+//            $files = [];
+//            foreach ( $filereferences as $tmpFileRef ) {
+//                $files[] = $this->processFileReference($tmpFileRef);
+//            }
+//            $this->contentResult['files'] = $files;
+//        }
+
+        // gallery
+        if(array_key_exists('gallery', $contentElements)) {
+            $processedGallery = [];
+            $processedGallery['settings'] = [
+                'position'  => $contentElements['gallery']['position'],
+                'width'     => $contentElements['gallery']['width'],
+                'border'    => $contentElements['gallery']['border']
+            ];
+            $processedGallery['media'] = [];
+            foreach ( $contentElements['gallery']['rows'] as $rows ) {
+                foreach ( $rows as $row ) {
+                    foreach ( $row as $col ) {
+                        $item                           = [];
+                        $item['file']                   = $this->processFileReference( $col['media'] );
+                        $item['dimensions']             = $col['dimensions'];
+                        $processedGallery['media'][]    = $item;
+                    }
+                }
             }
-            $this->contentResult['files'] = $files;
+            $this->contentResult['gallery'] = $processedGallery;
         }
+    }
+
+
+    private function processFileReference( $fileRef ) {
+        $singleFile = $fileRef->getProperties();
+        $singleFile = $this->stripUnwantedKeysFromArray($singleFile,'file');
+        $singleFile = $this->processTypolinks($singleFile);
+        return $singleFile;
     }
 
 
@@ -167,10 +206,38 @@ class DataProcessingUtil
     private function decodeJSON( $jsonstr ) {
         $jsonstr = str_replace(self::TOKEN,'',$jsonstr);
         $jsonstr = trim($jsonstr);
-        if(!empty($jsonstr)) $decoded = \GuzzleHttp\json_decode($jsonstr,true);
+        if(!empty($jsonstr)) {
+            $decoded = \GuzzleHttp\json_decode($jsonstr,true);
+            $decoded = $this->processTypolinks( $decoded );
+        }
         else $decoded = [];
         return $decoded;
     }
 
 
+    private function processTypolinks( &$contentElement ) {
+        foreach ($contentElement as $key => $value) {
+            if(is_string($value)) {
+                $transformed = preg_replace_callback("/t3:\/\/[^\"\s]+/", function($match) {
+                    return $this->resolveT3Urn($match[0]);
+                }, $value);
+                $contentElement[$key] = $transformed;
+            }
+        }
+        return $contentElement;
+    }
+
+
+    private function resolveT3Urn( $urn ) {
+        return $this->contentObject->stdWrap(
+            "",
+            [
+                'typolink.' => [
+                    'parameter' => $urn,
+                    'forceAbsoluteUrl' => true,
+                    'returnLast' => 'url'
+                ]
+            ]
+        );
+    }
 }

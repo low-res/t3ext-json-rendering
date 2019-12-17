@@ -9,8 +9,6 @@ class JsonContentElementViewHelper extends AbstractViewHelper {
 
     private static $result = "";
 
-    const TOKEN="__|__";
-
     public function initializeArguments()
     {
         $this->registerArgument('contentElement', 'array', 'The email address to resolve the gravatar for', true, []);
